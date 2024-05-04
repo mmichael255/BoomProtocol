@@ -5,5 +5,5 @@ import {ERC20Burnable} from "@openzeppelin/contracts/token/ERC20/extensions/ERC2
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract BToken is ERC20, ERC20Burnable {
-    constructor() ERC20("bToken", "bi") {}
+    constructor() ERC20("DebtToken", "dt") {}
 }
