@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-contract DataTypes {
+library DataTypes {
     struct AssetData {
         uint8 id;
         bool isActive;
-        bool isPause;
-        address aTokenAddress;
+        uint256 assetIndex;
+        address sTokenAddress;
         address dTokenAddress;
     }
 
