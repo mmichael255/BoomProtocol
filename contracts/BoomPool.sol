@@ -11,15 +11,19 @@ contract BoomPool {
     using SafeERC20 for SToken;
     using UserInfoUpdate for DataTypes.UserData;
 
-    address private admin;
-    uint256 private assertCount;
+    address private _admin;
+    uint256 private _assertCount;
 
     mapping(uint256 => address) private _assetList;
     mapping(address => DataTypes.AssetData) private _assetInfo;
     mapping(address => DataTypes.UserData) _userInfo;
 
+    constructor() {
+        _admin = msg.sender;
+    }
+
     modifier onlyAdmin() {
-        require(msg.sender == admin, "Must Be Admin");
+        require(msg.sender == _admin, "Must Be Admin");
         _;
     }
 
@@ -48,9 +52,9 @@ contract BoomPool {
         bool isAdded = _assetInfo[assertAddr].id != 0 ||
             _assetList[0] == assertAddr;
         if (!isAdded) {
-            _assetList[assertCount] = assertAddr;
-            _assetInfo[assertAddr].id = uint8(assertCount);
-            assertCount += 1;
+            _assetList[_assertCount] = assertAddr;
+            _assetInfo[assertAddr].id = uint8(_assertCount);
+            _assertCount += 1;
         }
     }
 
@@ -65,5 +69,9 @@ contract BoomPool {
         assetData.assetIndex = assetIndex;
         assetData.sTokenAddress = sToken;
         assetData.dTokenAddress = dToken;
+    }
+
+    function getAdmin() external view returns (address) {
+        return _admin;
     }
 }

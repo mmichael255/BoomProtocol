@@ -5,11 +5,21 @@ import {ERC20Burnable} from "@openzeppelin/contracts/token/ERC20/extensions/ERC2
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract SToken is ERC20("ShareToken", "st"), ERC20Burnable {
+    address private _admin;
     address private _pool;
 
     event MINT(address indexed user, uint256 indexed amount);
 
-    function initial(address pool) external {
+    modifier onlyAdmin() {
+        require(msg.sender == _admin, "Must Be Admin");
+        _;
+    }
+
+    constructor() {
+        _admin = msg.sender;
+    }
+
+    function initial(address pool) external onlyAdmin {
         _pool = pool;
     }
 
@@ -28,5 +38,13 @@ contract SToken is ERC20("ShareToken", "st"), ERC20Burnable {
         _mint(user, mintAmount);
         emit MINT(user, mintAmount);
         return previousBalance == 0;
+    }
+
+    function getAdmin() external view returns (address) {
+        return _admin;
+    }
+
+    function getPool() external view returns (address) {
+        return _pool;
     }
 }
