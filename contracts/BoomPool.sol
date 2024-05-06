@@ -16,7 +16,7 @@ contract BoomPool {
 
     mapping(uint256 => address) private _assetList;
     mapping(address => DataTypes.AssetData) private _assetInfo;
-    mapping(address => DataTypes.UserData) _userInfo;
+    mapping(address => DataTypes.UserData) private _userInfo;
 
     constructor() {
         _admin = msg.sender;
@@ -73,5 +73,15 @@ contract BoomPool {
 
     function getAdmin() external view returns (address) {
         return _admin;
+    }
+
+    function getAssetFromList(uint256 index) external view returns (address) {
+        return _assetList[index];
+    }
+
+    function getAssetInfo(
+        address asset
+    ) external view returns (DataTypes.AssetData memory) {
+        return _assetInfo[asset];
     }
 }

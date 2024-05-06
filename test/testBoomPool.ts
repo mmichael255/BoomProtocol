@@ -13,30 +13,90 @@ const asset4 = process.env.ASSET4;
 const asset5 = process.env.ASSET5;
 
 describe("Boompool", async () => {
-  async function deploy() {
+  async function deployPool() {
     const { BoomPool } = await ignition.deploy(BoomPoolModule);
+
+    return BoomPool;
+  }
+  async function deploySToken() {
     const { SToken } = await ignition.deploy(STokenModule);
 
-    return { BoomPool, SToken };
+    return SToken;
   }
-  async function getContract() {
-    const fixture = await loadFixture(deploy);
-    const BoomPool = fixture.BoomPool;
-    const SToken = fixture.SToken;
+  async function deployDToken() {
+    const { DToken } = await ignition.deploy(DTokenModule);
 
-    return { BoomPool, SToken };
+    return DToken;
+  }
+  async function getBoomPool() {
+    const BoomPool = await loadFixture(deployPool);
+    return BoomPool;
+  }
+  async function getSToken() {
+    const SToken = await loadFixture(deploySToken);
+    return SToken;
+  }
+  async function getDToken() {
+    const DToken = await loadFixture(deployDToken);
+    return DToken;
   }
 
   describe("constructor", async () => {
     it("adminInBothContract", async () => {
-      const { BoomPool, SToken } = await getContract();
+      const BoomPool = await getBoomPool();
+      const SToken = await getSToken();
       const deployer = (await ethers.getSigners())[0];
       const poolAdmin = await BoomPool.getAdmin();
-      const sTokenAdmind = await SToken.getAdmin();
+      const sTokenAdmin = await SToken.getAdmin();
       const pool = await SToken.getPool();
       assert.equal(poolAdmin, deployer.address);
-      assert.equal(sTokenAdmind, deployer.address);
+      assert.equal(sTokenAdmin, deployer.address);
       assert.equal(pool, await BoomPool.getAddress());
+    });
+  });
+  describe("deposit", async () => {
+    it("addAsset", async () => {
+      const BoomPool = await getBoomPool();
+      await BoomPool.addAssert(asset1);
+      await BoomPool.addAssert(asset2);
+
+      const asset1FromList = await BoomPool.getAssetFromList(0);
+      const asset2FromList = await BoomPool.getAssetFromList(1);
+
+      const asset1Id = (await BoomPool.getAssetInfo(asset1)).id;
+      const asset2Id = (await BoomPool.getAssetInfo(asset2)).id;
+
+      assert.equal(asset1FromList, asset1);
+      assert.equal(asset2FromList, asset2);
+      assert.equal(asset1Id, 0);
+      assert.equal(asset2Id, 1);
+    });
+    it("initAsset", async () => {
+      const BoomPool = await getBoomPool();
+      const STokenForAsset1 = await getSToken();
+      const DTokenForAsset1 = await getDToken();
+      await BoomPool.addAssert(asset1);
+      const assetIndex = 1;
+      await BoomPool.initAssert(
+        asset1,
+        assetIndex,
+        STokenForAsset1,
+        DTokenForAsset1
+      );
+
+      const asset1Info = await BoomPool.getAssetInfo(asset1);
+
+      assert.equal(asset1Info.id, 0);
+      assert.equal(asset1Info.isActive, true);
+      assert.equal(asset1Info.assetIndex, assetIndex);
+      assert.equal(
+        asset1Info.sTokenAddress,
+        await STokenForAsset1.getAddress()
+      );
+      assert.equal(
+        asset1Info.dTokenAddress,
+        await DTokenForAsset1.getAddress()
+      );
     });
   });
 });
