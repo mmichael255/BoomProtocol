@@ -2,6 +2,7 @@ import { ignition, ethers } from "hardhat";
 import BoomPoolModule from "../ignition/modules/BoomPoolModule";
 import DTokenModule from "../ignition/modules/DTokenModule";
 import STokenModule from "../ignition/modules/STokenModule";
+import { Asset1Module, Asset2Module } from "../ignition/modules/AssetModule";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { assert, expect } from "chai";
 import "dotenv/config";
@@ -28,6 +29,11 @@ describe("Boompool", async () => {
 
     return DToken;
   }
+  async function deployAsset() {
+    const { Asset1Contract } = await ignition.deploy(Asset1Module);
+    const { Asset2Contract } = await ignition.deploy(Asset2Module);
+    return { Asset1Contract, Asset2Contract };
+  }
   async function getBoomPool() {
     const BoomPool = await loadFixture(deployPool);
     return BoomPool;
@@ -39,6 +45,10 @@ describe("Boompool", async () => {
   async function getDToken() {
     const DToken = await loadFixture(deployDToken);
     return DToken;
+  }
+  async function getAsset() {
+    const fixture = await loadFixture(deployAsset);
+    return fixture;
   }
 
   describe("constructor", async () => {
@@ -97,6 +107,10 @@ describe("Boompool", async () => {
         asset1Info.dTokenAddress,
         await DTokenForAsset1.getAddress()
       );
+    });
+    it("depositToPool", async () => {
+      const BoomPool = await getBoomPool();
+      const STokenForAsset1 = await getSToken();
     });
   });
 });
