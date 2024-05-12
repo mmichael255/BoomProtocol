@@ -5,5 +5,7 @@ import {ERC20Burnable} from "@openzeppelin/contracts/token/ERC20/extensions/ERC2
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract Asset1 is ERC20, ERC20Burnable {
-    constructor() ERC20("Asset1", "a1") {}
+    constructor() ERC20("Asset1", "a1") {
+        _mint(msg.sender, 100 ether);
+    }
 }

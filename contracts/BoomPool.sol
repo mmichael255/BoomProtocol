@@ -8,7 +8,7 @@ import {UserInfoUpdate} from "./libraries/UserInfoUpdate.sol";
 import {SToken} from "./SToken.sol";
 
 contract BoomPool {
-    using SafeERC20 for SToken;
+    using SafeERC20 for IERC20;
     using UserInfoUpdate for DataTypes.UserData;
 
     address private _admin;
@@ -30,10 +30,9 @@ contract BoomPool {
     function deposit(address asset, uint256 amount) public {
         DataTypes.AssetData storage assetData = _assetInfo[asset];
         require(assetData.isActive, "BP__AssertNotActive");
-        //Could update assetData state, all kinds of index
+        //Could update assetData state, all kinds of index(not yet done)
         address sTokenAddr = assetData.sTokenAddress;
-        SToken(sTokenAddr).safeTransferFrom(msg.sender, sTokenAddr, amount);
-        //mint function needed to finish
+        IERC20(asset).safeTransferFrom(msg.sender, sTokenAddr, amount);
         bool isFirst = SToken(sTokenAddr).mint(
             msg.sender,
             amount,
@@ -60,6 +59,7 @@ contract BoomPool {
 
     function initAssert(
         address assertAddr,
+        address priceFeed,
         uint256 assetIndex,
         address sToken,
         address dToken
@@ -67,6 +67,7 @@ contract BoomPool {
         DataTypes.AssetData storage assetData = _assetInfo[assertAddr];
         assetData.isActive = true;
         assetData.assetIndex = assetIndex;
+        assetData.priceFeed = priceFeed;
         assetData.sTokenAddress = sToken;
         assetData.dTokenAddress = dToken;
     }

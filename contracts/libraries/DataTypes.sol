@@ -5,6 +5,7 @@ library DataTypes {
     struct AssetData {
         uint8 id;
         bool isActive;
+        address priceFeed;
         uint256 assetIndex;
         address sTokenAddress;
         address dTokenAddress;
