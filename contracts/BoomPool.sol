@@ -5,7 +5,14 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {DataTypes} from "./libraries/DataTypes.sol";
 import {UserInfoUpdate} from "./libraries/UserInfoUpdate.sol";
+import {Calculate} from "./libraries/Calculate.sol";
 import {SToken} from "./SToken.sol";
+
+error BoomPoolInsufficientSTokenBlance(
+    address user,
+    uint256 amount,
+    uint256 balance
+);
 
 contract BoomPool {
     using SafeERC20 for IERC20;
@@ -43,9 +50,31 @@ contract BoomPool {
         }
     }
 
-    function withdraw() public {}
+    function withdraw(address asset, uint256 amount, address to) public {
+        //get asset data: Stoken address DToken address
+        DataTypes.AssetData storage assetData = _assetInfo[asset];
+        address sTokenAddress = assetData.sTokenAddress;
+        uint256 balanceOfUser = IERC20(sTokenAddress).balanceOf(msg.sender);
+        if (amount > balanceOfUser || balanceOfUser == 0) {
+            revert BoomPoolInsufficientSTokenBlance(
+                msg.sender,
+                amount,
+                balanceOfUser
+            );
+        }
+        //pass to handle user info
+        (uint256 totalCollateralInUsd,uint256 totalDebtInUsd)  = Calculate.calculateUserData()
 
-    function borrow() public {}
+        
+        //validate withdraw
+        //withdraw to toAddress
+    }
+
+    function borrow(address asset, uint256 amount) public {}
+
+    function repay() public {}
+
+    function liquidation() public {}
 
     function addAssert(address assertAddr) public onlyAdmin {
         bool isAdded = _assetInfo[assertAddr].id != 0 ||
