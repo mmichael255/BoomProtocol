@@ -14,4 +14,23 @@ library UserInfoUpdate {
             (userData.data & ~(1 << (assetId * 2 + 1))) |
             (toDeposit ? 1 : 0 << (assetId * 2 + 1));
     }
+
+    function setBorrowAssert(
+        DataTypes.UserData storage userData,
+        uint256 assetId,
+        bool toBorrow
+    ) internal {
+        require(assetId < 128, "Invalid assetId");
+        userData.data =
+            (userData.data & ~(1 << (assetId * 2))) |
+            (toBorrow ? 1 : 0 << (assetId * 2));
+    }
+
+    function isDepositedAssertOrBorrowing(
+        DataTypes.UserData memory userData,
+        uint256 assetId
+    ) internal returns (bool) {
+        require(assetId < 128, "Invalid assetId");
+        return ((userData.data >> (assetId * 2)) & 3 != 0);
+    }
 }
