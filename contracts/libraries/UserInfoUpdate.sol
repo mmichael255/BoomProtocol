@@ -29,8 +29,24 @@ library UserInfoUpdate {
     function isDepositedAssertOrBorrowing(
         DataTypes.UserData memory userData,
         uint256 assetId
-    ) internal returns (bool) {
+    ) internal pure returns (bool) {
         require(assetId < 128, "Invalid assetId");
         return ((userData.data >> (assetId * 2)) & 3 != 0);
+    }
+
+    function isDepositedAssert(
+        DataTypes.UserData memory userData,
+        uint256 assetId
+    ) internal pure returns (bool) {
+        require(assetId < 128, "Invalid assetId");
+        return ((userData.data >> (assetId * 2 + 1)) & 1 != 0);
+    }
+
+    function isBorrowing(
+        DataTypes.UserData memory userData,
+        uint256 assetId
+    ) internal pure returns (bool) {
+        require(assetId < 128, "Invalid assetId");
+        return ((userData.data >> (assetId * 2)) & 1 != 0);
     }
 }

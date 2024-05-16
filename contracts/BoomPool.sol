@@ -89,14 +89,16 @@ contract BoomPool {
     function initAssert(
         address assertAddr,
         address priceFeed,
+        uint256 decimals,
         uint256 assetIndex,
         address sToken,
         address dToken
     ) public onlyAdmin {
         DataTypes.AssetData storage assetData = _assetInfo[assertAddr];
         assetData.isActive = true;
-        assetData.assetIndex = assetIndex;
         assetData.priceFeed = priceFeed;
+        assetData.decimals = decimals;
+        assetData.assetIndex = assetIndex;
         assetData.sTokenAddress = sToken;
         assetData.dTokenAddress = dToken;
     }
