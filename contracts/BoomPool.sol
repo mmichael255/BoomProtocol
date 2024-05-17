@@ -63,9 +63,16 @@ contract BoomPool {
             );
         }
         //pass to handle user info
-        (uint256 totalCollateralInUsd,uint256 totalDebtInUsd)  = Calculate.calculateUserData()
+        Calculate.isHealthFactorOkToDecrease(
+            _assetList,
+            _assetInfo,
+            _userInfo[msg.sender],
+            msg.sender,
+            _assertCount,
+            assetData.priceFeed,
+            amount
+        );
 
-        
         //validate withdraw
         //withdraw to toAddress
     }

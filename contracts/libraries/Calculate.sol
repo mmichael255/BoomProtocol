@@ -16,14 +16,38 @@ library Calculate {
     uint256 private constant LIQUIDATION_BONUS = 10;
     uint256 private constant LIQUIDATION_PRECISION = 100;
 
+    function isHealthFactorOkToDecrease(
+        mapping(uint256 => address) storage assetList,
+        mapping(address => DataTypes.AssetData) storage assetInfo,
+        DataTypes.UserData memory userUsageData,
+        address user,
+        uint256 assetCount,
+        address withdrawAssetPriceFeed,
+        uint256 amount
+    ) internal returns (bool) {
+        (
+            uint256 totalCollateralInEth,
+            uint256 totalDebtInEth
+        ) = calculateUserData(
+                assetList,
+                assetInfo,
+                userUsageData,
+                user,
+                assetCount
+            );
+    }
+
     function calculateUserData(
         mapping(uint256 => address) storage assetList,
         mapping(address => DataTypes.AssetData) storage assetInfo,
         DataTypes.UserData memory userUsageData,
         address user,
         uint256 assetCount
-    ) internal returns (uint256, uint256) {
-        uint256 totalCollateralInEth;
+    )
+        internal
+        view
+        returns (uint256 totalCollateralInEth, uint256 totalDebtInEth)
+    {
         for (uint256 assetId = 0; assetId < assetCount; assetId++) {
             if (!userUsageData.isDepositedAssertOrBorrowing(assetId)) {
                 continue;
@@ -32,18 +56,49 @@ library Calculate {
             DataTypes.AssetData storage currentAsset = assetInfo[
                 currentAssetAddress
             ];
-            address currentAssetPricedFeed = currentAsset.priceFeed;
+            address currentAssetPriceFeedAddr = currentAsset.priceFeed;
+            uint256 currentAssetUintPrice = getAssetValueInEth(
+                currentAssetPriceFeedAddr
+            );
+            uint256 tokenUnit = 10 ** currentAsset.decimals;
+
             if (userUsageData.isDepositedAssert(assetId)) {
-                uint256 tokenUnit = 10 ** currentAsset.decimals;
                 address currentAssetSToken = currentAsset.sTokenAddress;
                 uint256 sTokenBalanceOfUser = IERC20(currentAssetSToken)
                     .balanceOf(user);
+                uint256 userCurrentAssetBalanceInEth = currentAssetUintPrice *
+                    (sTokenBalanceOfUser / tokenUnit);
+                totalCollateralInEth += userCurrentAssetBalanceInEth;
+            }
+            //calculate debt
+            if (userUsageData.isBorrowing(assetId)) {
+                address currentAssetDToken = currentAsset.dTokenAddress;
+                uint256 dTokenBalanceOfUser = IERC20(currentAssetDToken)
+                    .balanceOf(user);
+                uint256 userCurrentAssetDebtInEth = currentAssetUintPrice *
+                    (dTokenBalanceOfUser / tokenUnit);
+                totalDebtInEth += userCurrentAssetDebtInEth;
             }
         }
     }
 
-    function getAssetValueInEth(address priceFeed) public returns (uint256) {
-        AggregatorV3Interface priceFeed = AggregatorV3Interface(priceFeed);
+    function calculateUserHealthFactor(
+        uint256 collateralInEth,
+        uint256 debtInEth
+    ) internal returns (uint256) {
+        //if debt is 0 ?
+        if (debtInEth == 0) {
+            return 1e18;
+        }
+        uint256 totalCollateralAdjustForThrehold = (collateralInEth *
+            LIQUIDATION_THREHOLD) / LIQUIDATION_PRECISION;
+        return (totalCollateralAdjustForThrehold / debtInEth);
+    }
+
+    function getAssetValueInEth(
+        address priceFeedAddr
+    ) public view returns (uint256) {
+        AggregatorV3Interface priceFeed = AggregatorV3Interface(priceFeedAddr);
         (, int256 price, , , ) = priceFeed.checkStaleLatestRoundData();
         return uint256(price);
     }
