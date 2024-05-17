@@ -14,17 +14,19 @@ library Calculate {
     uint256 private constant PRECISION = 1e18;
     uint256 private constant LIQUIDATION_THREHOLD = 50; //this mean you need to be 200% over-collateralized
     uint256 private constant LIQUIDATION_BONUS = 10;
+    uint256 private constant MIN_HEALTH_FACTOR = 1;
     uint256 private constant LIQUIDATION_PRECISION = 100;
 
     function isHealthFactorOkToDecrease(
+        address assetAddr,
         mapping(uint256 => address) storage assetList,
         mapping(address => DataTypes.AssetData) storage assetInfo,
         DataTypes.UserData memory userUsageData,
         address user,
         uint256 assetCount,
-        address withdrawAssetPriceFeed,
         uint256 amount
     ) internal returns (bool) {
+        DataTypes.AssetData memory assetData = assetInfo[assetAddr];
         (
             uint256 totalCollateralInEth,
             uint256 totalDebtInEth
@@ -35,6 +37,16 @@ library Calculate {
                 user,
                 assetCount
             );
+        uint256 assetPrice = getAssetValueInEth(assetData.priceFeed);
+        uint256 decreaseValueInEth = (amount / (10 ** assetData.decimals)) *
+            assetPrice;
+        uint256 totalCollateralAfterDecreaseInEth = totalCollateralInEth -
+            decreaseValueInEth;
+        uint256 healthFactor = calculateUserHealthFactor(
+            totalCollateralAfterDecreaseInEth,
+            totalDebtInEth
+        );
+        return healthFactor < MIN_HEALTH_FACTOR;
     }
 
     function calculateUserData(
@@ -57,7 +69,7 @@ library Calculate {
                 currentAssetAddress
             ];
             address currentAssetPriceFeedAddr = currentAsset.priceFeed;
-            uint256 currentAssetUintPrice = getAssetValueInEth(
+            uint256 currentAssetUintPriceInEth = getAssetValueInEth(
                 currentAssetPriceFeedAddr
             );
             uint256 tokenUnit = 10 ** currentAsset.decimals;
@@ -66,8 +78,8 @@ library Calculate {
                 address currentAssetSToken = currentAsset.sTokenAddress;
                 uint256 sTokenBalanceOfUser = IERC20(currentAssetSToken)
                     .balanceOf(user);
-                uint256 userCurrentAssetBalanceInEth = currentAssetUintPrice *
-                    (sTokenBalanceOfUser / tokenUnit);
+                uint256 userCurrentAssetBalanceInEth = (sTokenBalanceOfUser /
+                    tokenUnit) * currentAssetUintPriceInEth;
                 totalCollateralInEth += userCurrentAssetBalanceInEth;
             }
             //calculate debt
@@ -75,8 +87,8 @@ library Calculate {
                 address currentAssetDToken = currentAsset.dTokenAddress;
                 uint256 dTokenBalanceOfUser = IERC20(currentAssetDToken)
                     .balanceOf(user);
-                uint256 userCurrentAssetDebtInEth = currentAssetUintPrice *
-                    (dTokenBalanceOfUser / tokenUnit);
+                uint256 userCurrentAssetDebtInEth = (dTokenBalanceOfUser /
+                    tokenUnit) * currentAssetUintPriceInEth;
                 totalDebtInEth += userCurrentAssetDebtInEth;
             }
         }

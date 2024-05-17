@@ -64,12 +64,12 @@ contract BoomPool {
         }
         //pass to handle user info
         Calculate.isHealthFactorOkToDecrease(
+            asset,
             _assetList,
             _assetInfo,
             _userInfo[msg.sender],
             msg.sender,
             _assertCount,
-            assetData.priceFeed,
             amount
         );
 
