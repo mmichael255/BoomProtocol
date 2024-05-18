@@ -9,6 +9,7 @@ contract SToken is ERC20("ShareToken", "st"), ERC20Burnable {
     address private _pool;
 
     event MINT(address indexed user, uint256 indexed amount);
+    event BURN(address indexed user, uint256 indexed amount);
 
     modifier onlyAdmin() {
         require(msg.sender == _admin, "Must Be Admin");
@@ -38,6 +39,16 @@ contract SToken is ERC20("ShareToken", "st"), ERC20Burnable {
         _mint(user, mintAmount);
         emit MINT(user, mintAmount);
         return previousBalance == 0;
+    }
+
+    function burn(
+        address user,
+        uint256 amount,
+        uint256 index
+    ) external onlyPool {
+        uint256 burnAmount = amount / index;
+        _burn(user, burnAmount);
+        emit BURN(user, burnAmount);
     }
 
     function getAdmin() external view returns (address) {

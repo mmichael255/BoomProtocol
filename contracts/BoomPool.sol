@@ -7,12 +7,7 @@ import {DataTypes} from "./libraries/DataTypes.sol";
 import {UserInfoUpdate} from "./libraries/UserInfoUpdate.sol";
 import {Calculate} from "./libraries/Calculate.sol";
 import {SToken} from "./SToken.sol";
-
-error BoomPoolInsufficientSTokenBlance(
-    address user,
-    uint256 amount,
-    uint256 balance
-);
+import {Errors} from "./libraries/Errors.sol";
 
 contract BoomPool {
     using SafeERC20 for IERC20;
@@ -30,13 +25,17 @@ contract BoomPool {
     }
 
     modifier onlyAdmin() {
-        require(msg.sender == _admin, "Must Be Admin");
+        if (msg.sender != _admin) {
+            revert Errors.BP__MustBeAdmin();
+        }
         _;
     }
 
     function deposit(address asset, uint256 amount) public {
         DataTypes.AssetData storage assetData = _assetInfo[asset];
-        require(assetData.isActive, "BP__AssertNotActive");
+        if (!assetData.isActive) {
+            revert Errors.BP__AssertNotActive();
+        }
         //Could update assetData state, all kinds of index(not yet done)
         address sTokenAddr = assetData.sTokenAddress;
         IERC20(asset).safeTransferFrom(msg.sender, sTokenAddr, amount);
@@ -56,25 +55,34 @@ contract BoomPool {
         address sTokenAddress = assetData.sTokenAddress;
         uint256 balanceOfUser = IERC20(sTokenAddress).balanceOf(msg.sender);
         if (amount > balanceOfUser || balanceOfUser == 0) {
-            revert BoomPoolInsufficientSTokenBlance(
+            revert Errors.BoomPoolInsufficientSTokenBlance(
                 msg.sender,
                 amount,
                 balanceOfUser
             );
         }
-        //pass to handle user info
-        Calculate.isHealthFactorOkToDecrease(
-            asset,
-            _assetList,
-            _assetInfo,
-            _userInfo[msg.sender],
-            msg.sender,
-            _assertCount,
-            amount
-        );
-
         //validate withdraw
+        if (
+            !(
+                Calculate.isHealthFactorOkToDecrease(
+                    asset,
+                    _assetList,
+                    _assetInfo,
+                    _userInfo[msg.sender],
+                    msg.sender,
+                    _assertCount,
+                    amount
+                )
+            )
+        ) {
+            revert Errors.BP__TransationNotAllowed();
+        }
+        if (amount == balanceOfUser) {
+            //updateCollateral
+        }
         //withdraw to toAddress
+        SToken(sTokenAddress).burn(msg.sender, amount, assetData.assetIndex);
+        IERC20(asset).safeTransfer(to, amount);
     }
 
     function borrow(address asset, uint256 amount) public {}

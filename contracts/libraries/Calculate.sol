@@ -4,10 +4,11 @@ pragma solidity ^0.8.24;
 import {UserInfoUpdate} from "./UserInfoUpdate.sol";
 import {DataTypes} from "./DataTypes.sol";
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import {OracleLib, AggregatorV3Interface} from "./OracleLib.sol";
+// import {OracleLib} from "./OracleLib.sol";
+import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 
 library Calculate {
-    using OracleLib for AggregatorV3Interface;
+    // using OracleLib for AggregatorV3Interface;
     using UserInfoUpdate for DataTypes.UserData;
 
     uint256 private constant ADDITIONAL_FEED_PRECISION = 1e10;
@@ -25,7 +26,7 @@ library Calculate {
         address user,
         uint256 assetCount,
         uint256 amount
-    ) internal returns (bool) {
+    ) internal view returns (bool) {
         DataTypes.AssetData memory assetData = assetInfo[assetAddr];
         (
             uint256 totalCollateralInEth,
@@ -46,7 +47,7 @@ library Calculate {
             totalCollateralAfterDecreaseInEth,
             totalDebtInEth
         );
-        return healthFactor < MIN_HEALTH_FACTOR;
+        return healthFactor >= MIN_HEALTH_FACTOR;
     }
 
     function calculateUserData(
@@ -97,7 +98,7 @@ library Calculate {
     function calculateUserHealthFactor(
         uint256 collateralInEth,
         uint256 debtInEth
-    ) internal returns (uint256) {
+    ) internal pure returns (uint256) {
         //if debt is 0 ?
         if (debtInEth == 0) {
             return 1e18;
@@ -111,7 +112,7 @@ library Calculate {
         address priceFeedAddr
     ) public view returns (uint256) {
         AggregatorV3Interface priceFeed = AggregatorV3Interface(priceFeedAddr);
-        (, int256 price, , , ) = priceFeed.checkStaleLatestRoundData();
+        (, int256 price, , , ) = priceFeed.latestRoundData();
         return uint256(price);
     }
 }
