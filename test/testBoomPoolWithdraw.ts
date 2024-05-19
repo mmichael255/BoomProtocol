@@ -1,44 +1,40 @@
-import { ignition, ethers } from "hardhat";
-import {} from "@nomicfoundation/hardhat-ethers/types";
-import BoomPoolModule from "../ignition/modules/BoomPoolModule";
-import DTokenModule from "../ignition/modules/DTokenModule";
-import STokenModule from "../ignition/modules/STokenModule";
-import { Asset1Module, Asset2Module } from "../ignition/modules/AssetModule";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { assert, expect } from "chai";
 import "dotenv/config";
-import type {
-  BaseContract,
-  BigNumberish,
-  BytesLike,
-  FunctionFragment,
-  Result,
-  Interface,
-  AddressLike,
-  ContractRunner,
-  ContractMethod,
-  Listener,
-} from "ethers";
+import { testEnv, initTestEnv } from "./setUpEnv";
+import { it } from "mocha";
+import { ethers } from "hardhat";
 
-interface TestEnv {
-  deployer: AddressLike;
-  boomPool: BaseContract;
-}
+const decimals = 18;
+const assetIndex = 1;
+const depolyAmount = ethers.parseEther("10");
 
-async function deployPool() {
-  const { BoomPool } = await ignition.deploy(BoomPoolModule);
+describe("BoomPoolWithdraw", async () => {
+  before(async () => {
+    await initTestEnv();
+    const { boomPool, assets, users, sTokens, dTokens, priceFeeds } = testEnv;
+    await boomPool.addAssert(assets[0]);
+    await boomPool.addAssert(assets[1]);
 
-  return BoomPool;
-}
-
-const testEnv: TestEnv = {
-  deployer: "" as AddressLike,
-  boomPool: {} as BaseContract,
-};
-
-async function initTestEnv() {
-  testEnv.deployer = (await ethers.getSigners())[0];
-  testEnv.boomPool = await deployPool();
-}
-
-describe("BoomPoolWithdraw", async () => {});
+    await boomPool.initAssert(
+      assets[0],
+      priceFeeds[0],
+      decimals,
+      assetIndex,
+      sTokens[0],
+      dTokens[0]
+    );
+    await boomPool.initAssert(
+      assets[1],
+      priceFeeds[1],
+      decimals,
+      assetIndex,
+      sTokens[1],
+      dTokens[1]
+    );
+  });
+  it("testEnv", async () => {
+    const { boomPool, assets, users, sTokens, dTokens, priceFeeds } = testEnv;
+    console.log(await boomPool.getAssetInfo(assets[0]));
+    console.log(await boomPool.getAssetInfo(assets[1]));
+  });
+});
