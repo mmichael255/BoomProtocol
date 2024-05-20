@@ -110,7 +110,7 @@ export async function initTestEnv() {
   testEnv.assets.push(Asset1Contract, Asset2Contract);
   for (let i = 0; i < testEnv.assets.length; i++) {
     testEnv.sTokens.push(await deploySToken());
-    await testEnv.sTokens[0].initial(await testEnv.boomPool.getAddress());
+    await testEnv.sTokens[i].initial(testEnv.boomPool, testEnv.assets[i]);
     testEnv.dTokens.push(await deployDToken());
     testEnv.priceFeeds.push(await deployPriceFeed());
   }

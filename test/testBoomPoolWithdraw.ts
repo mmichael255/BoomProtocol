@@ -32,8 +32,17 @@ describe("BoomPoolWithdraw", async () => {
       dTokens[1]
     );
   });
-  it("testEnv", async () => {
+  it("testInitEnv", async () => {
     const { boomPool, assets, users, sTokens, dTokens, priceFeeds } = testEnv;
+    //get user balance in assets
+    for (let i = 1; i < users.length; i++) {
+      if (i < 4) {
+        await assets[0].balanceOf(users[i]);
+      }
+      if (i > 6) {
+        await assets[0].balanceOf(users[i]);
+      }
+    }
     console.log(await boomPool.getAssetInfo(assets[0]));
     console.log(await boomPool.getAssetInfo(assets[1]));
   });

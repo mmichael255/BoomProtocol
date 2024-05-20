@@ -78,11 +78,16 @@ contract BoomPool {
             revert Errors.BP__TransationNotAllowed();
         }
         if (amount == balanceOfUser) {
-            //updateCollateral
+            //updateCollateralInfo
+            _userInfo[msg.sender].setDepositAssert(assetData.id, false);
         }
         //withdraw to toAddress
-        SToken(sTokenAddress).burn(msg.sender, amount, assetData.assetIndex);
-        IERC20(asset).safeTransfer(to, amount);
+        SToken(sTokenAddress).burn(
+            msg.sender,
+            to,
+            amount,
+            assetData.assetIndex
+        );
     }
 
     function borrow(address asset, uint256 amount) public {}

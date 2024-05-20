@@ -3,10 +3,15 @@ pragma solidity ^0.8.24;
 
 import {ERC20Burnable} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 contract SToken is ERC20("ShareToken", "st"), ERC20Burnable {
+    using SafeERC20 for IERC20;
+
     address private _admin;
     address private _pool;
+    address private _underlyingAsset;
 
     event MINT(address indexed user, uint256 indexed amount);
     event BURN(address indexed user, uint256 indexed amount);
@@ -20,8 +25,9 @@ contract SToken is ERC20("ShareToken", "st"), ERC20Burnable {
         _admin = msg.sender;
     }
 
-    function initial(address pool) external onlyAdmin {
+    function initial(address pool, address underlyingAsset) external onlyAdmin {
         _pool = pool;
+        _underlyingAsset = underlyingAsset;
     }
 
     modifier onlyPool() {
@@ -42,13 +48,16 @@ contract SToken is ERC20("ShareToken", "st"), ERC20Burnable {
     }
 
     function burn(
-        address user,
+        address from,
+        address to,
         uint256 amount,
         uint256 index
     ) external onlyPool {
         uint256 burnAmount = amount / index;
-        _burn(user, burnAmount);
-        emit BURN(user, burnAmount);
+        _burn(from, burnAmount);
+        IERC20(_underlyingAsset).safeTransfer(to, amount);
+
+        emit BURN(from, burnAmount);
     }
 
     function getAdmin() external view returns (address) {

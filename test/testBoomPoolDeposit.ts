@@ -6,6 +6,7 @@ import { Asset1Module, Asset2Module } from "../ignition/modules/AssetModule";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { assert, expect } from "chai";
 import "dotenv/config";
+import { Contract } from "ethers";
 
 const asset1Oracle = process.env.ASSET1;
 const asset2Oracle = process.env.ASSET2;
@@ -38,9 +39,9 @@ describe("BoompoolDeposit", async () => {
     const BoomPool = await loadFixture(deployPool);
     return BoomPool;
   }
-  async function getSToken(poolAddr: string) {
+  async function getSToken(poolAddr: string, underlyingAssetAddr: string) {
     const SToken = await loadFixture(deploySToken);
-    await SToken.initial(poolAddr);
+    await SToken.initial(poolAddr, underlyingAssetAddr);
     return SToken;
   }
   async function getDToken() {
@@ -55,7 +56,11 @@ describe("BoompoolDeposit", async () => {
   describe("constructor", async () => {
     it("adminInBothContract", async () => {
       const BoomPool = await getBoomPool();
-      const SToken = await getSToken(await BoomPool.getAddress());
+      const Asset1Contract = (await getAssetContract()).Asset1Contract;
+      const SToken = await getSToken(
+        await BoomPool.getAddress(),
+        await Asset1Contract.getAddress()
+      );
       const deployer = (await ethers.getSigners())[0];
       const poolAdmin = await BoomPool.getAdmin();
       const sTokenAdmin = await SToken.getAdmin();
@@ -84,9 +89,12 @@ describe("BoompoolDeposit", async () => {
     });
     it("initAsset", async () => {
       const BoomPool = await getBoomPool();
-      const STokenForAsset1 = await getSToken(await BoomPool.getAddress());
-      const DTokenForAsset1 = await getDToken();
       const Asset1Contract = (await getAssetContract()).Asset1Contract;
+      const STokenForAsset1 = await getSToken(
+        await BoomPool.getAddress(),
+        await Asset1Contract.getAddress()
+      );
+      const DTokenForAsset1 = await getDToken();
       await BoomPool.addAssert(Asset1Contract);
       const assetIndex = 1;
       const decimals = 18;
@@ -137,7 +145,10 @@ describe("BoompoolDeposit", async () => {
       const user = (await ethers.getSigners())[0];
 
       await BoomPool.addAssert(AssetContracts.Asset1Contract);
-      const STokenForAsset1 = await getSToken(await BoomPool.getAddress());
+      const STokenForAsset1 = await getSToken(
+        await BoomPool.getAddress(),
+        await AssetContracts.Asset1Contract.getAddress()
+      );
       const DTokenForAsset1 = await getDToken();
 
       const decimals = 18;
