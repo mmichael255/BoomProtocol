@@ -41,23 +41,8 @@ async function deployPriceFeed() {
   return MockV3Aggregator;
 }
 async function deployAssetContract() {
-  const users = await ethers.getSigners();
-  const usersForAsset1: string[] = [];
-  const usersForAsset2: string[] = [];
-  for (let i = 1; i < users.length; i++) {
-    if (i < 4) {
-      usersForAsset1.push(users[i].address);
-    }
-    if (i > 6) {
-      usersForAsset2.push(users[i].address);
-    }
-  }
-  const { Asset1Contract } = await ignition.deploy(Asset1Module, {
-    parameters: { Asset1: { users: usersForAsset1 } },
-  });
-  const { Asset2Contract } = await ignition.deploy(Asset2Module, {
-    parameters: { Asset2: { users: usersForAsset2 } },
-  });
+  const { Asset1Contract } = await ignition.deploy(Asset1Module);
+  const { Asset2Contract } = await ignition.deploy(Asset2Module);
   return { Asset1Contract, Asset2Contract };
 }
 async function getBoomPool() {
@@ -108,6 +93,13 @@ export async function initTestEnv() {
   testEnv.boomPool = await getBoomPool();
   const { Asset1Contract, Asset2Contract } = await getAssetContract();
   testEnv.assets.push(Asset1Contract, Asset2Contract);
+
+  const users = await ethers.getSigners();
+  const usersForAsset1: Signer[] = users.slice(1, 5);
+  const usersForAsset2: Signer[] = users.slice(6);
+  await testEnv.assets[0].initial(usersForAsset1);
+  await testEnv.assets[1].initial(usersForAsset2);
+
   for (let i = 0; i < testEnv.assets.length; i++) {
     testEnv.sTokens.push(await deploySToken());
     await testEnv.sTokens[i].initial(testEnv.boomPool, testEnv.assets[i]);
