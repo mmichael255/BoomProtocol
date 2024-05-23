@@ -50,6 +50,16 @@ library Calculate {
         return healthFactor >= MIN_HEALTH_FACTOR;
     }
 
+    function isOkToBorrow(
+        address assetAddr,
+        mapping(uint256 => address) storage assetList,
+        mapping(address => DataTypes.AssetData) storage assetInfo,
+        DataTypes.UserData memory userUsageData,
+        address user,
+        uint256 assetCount,
+        uint256 amount
+    ) internal view returns (bool) {}
+
     function calculateUserData(
         mapping(uint256 => address) storage assetList,
         mapping(address => DataTypes.AssetData) storage assetInfo,

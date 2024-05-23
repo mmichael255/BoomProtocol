@@ -14,7 +14,7 @@ contract BoomPool {
     using UserInfoUpdate for DataTypes.UserData;
 
     address private _admin;
-    uint256 private _assertCount;
+    uint256 private _assetCount;
 
     mapping(uint256 => address) private _assetList;
     mapping(address => DataTypes.AssetData) private _assetInfo;
@@ -70,7 +70,7 @@ contract BoomPool {
                     _assetInfo,
                     _userInfo[msg.sender],
                     msg.sender,
-                    _assertCount,
+                    _assetCount,
                     amount
                 )
             )
@@ -78,7 +78,7 @@ contract BoomPool {
             revert Errors.BP__TransationNotAllowed();
         }
         if (amount == balanceOfUser) {
-            //updateCollateralInfo
+            //update collateral info
             _userInfo[msg.sender].setDepositAssert(assetData.id, false);
         }
         //withdraw to toAddress
@@ -90,7 +90,27 @@ contract BoomPool {
         );
     }
 
-    function borrow(address asset, uint256 amount) public {}
+    function borrow(address asset, uint256 amount) public {
+        DataTypes.AssetData storage assetData = _assetInfo[asset];
+        if (!assetData.isActive) {
+            revert Errors.BP__AssertNotActive();
+        }
+        //validata borrow
+        Calculate.isOkToBorrow(
+            asset,
+            _assetList,
+            _assetInfo,
+            _userInfo[msg.sender],
+            msg.sender,
+            _assetCount,
+            amount
+        );
+
+        //insterest rate?
+        //Dtoken mint, is first?setBorrow
+
+        //SToken release underlying token
+    }
 
     function repay() public {}
 
@@ -100,9 +120,9 @@ contract BoomPool {
         bool isAdded = _assetInfo[assertAddr].id != 0 ||
             _assetList[0] == assertAddr;
         if (!isAdded) {
-            _assetList[_assertCount] = assertAddr;
-            _assetInfo[assertAddr].id = uint8(_assertCount);
-            _assertCount += 1;
+            _assetList[_assetCount] = assertAddr;
+            _assetInfo[assertAddr].id = uint8(_assetCount);
+            _assetCount += 1;
         }
     }
 

@@ -7,7 +7,7 @@ import { Contract, Signer } from "ethers";
 
 const decimals = 18;
 const assetIndex = 1;
-const allowedAmount = ethers.parseEther("15");
+const allowedAmount = ethers.parseEther("1");
 let userDepositedAsset1: Signer = testEnv.users[1];
 let userDepositedAsset2: Signer = testEnv.users[6];
 
@@ -40,13 +40,13 @@ describe("BoomPoolWithdraw", async () => {
     const user2Asset2 = assets[1].connect(userDepositedAsset2);
 
     user1Asset1.approve(boomPool, allowedAmount);
-    user2Asset2.approve(boomPool, BigInt(2) * allowedAmount);
+    user2Asset2.approve(boomPool, BigInt(3) * allowedAmount);
 
     const user1Pool = boomPool.connect(userDepositedAsset1);
     const user2Pool = boomPool.connect(userDepositedAsset2);
 
     await user1Pool.deposit(assets[0], allowedAmount);
-    await user2Pool.deposit(assets[1], BigInt(2) * allowedAmount);
+    await user2Pool.deposit(assets[1], BigInt(3) * allowedAmount);
   });
   it("testInitEnv", async () => {
     const { boomPool, assets, users, sTokens, dTokens, priceFeeds } = testEnv;
