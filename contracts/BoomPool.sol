@@ -96,15 +96,19 @@ contract BoomPool {
             revert Errors.BP__AssertNotActive();
         }
         //validata borrow
-        Calculate.isOkToBorrow(
-            asset,
-            _assetList,
-            _assetInfo,
-            _userInfo[msg.sender],
-            msg.sender,
-            _assetCount,
-            amount
-        );
+        if (
+            !Calculate.isOkToBorrow(
+                asset,
+                _assetList,
+                _assetInfo,
+                _userInfo[msg.sender],
+                msg.sender,
+                _assetCount,
+                amount
+            )
+        ) {
+            revert Errors.BP__BorrowNotAllowed();
+        }
 
         //insterest rate?
         //Dtoken mint, is first?setBorrow

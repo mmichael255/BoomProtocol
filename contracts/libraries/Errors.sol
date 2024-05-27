@@ -5,6 +5,7 @@ library Errors {
     error BP__MustBeAdmin();
     error BP__AssertNotActive();
     error BP__TransationNotAllowed();
+    error BP__BorrowNotAllowed();
     error BoomPoolInsufficientSTokenBlance(
         address user,
         uint256 amount,

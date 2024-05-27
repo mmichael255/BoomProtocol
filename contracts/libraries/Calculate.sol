@@ -14,9 +14,9 @@ library Calculate {
     uint256 private constant ADDITIONAL_FEED_PRECISION = 1e10;
     uint256 private constant PRECISION = 1e18;
     uint256 private constant LIQUIDATION_THREHOLD = 50; //this mean you need to be 200% over-collateralized
+    uint256 private constant LIQUIDATION_PRECISION = 100;
     uint256 private constant LIQUIDATION_BONUS = 10;
     uint256 private constant MIN_HEALTH_FACTOR = 1;
-    uint256 private constant LIQUIDATION_PRECISION = 100;
 
     function isHealthFactorOkToDecrease(
         address assetAddr,
@@ -38,7 +38,7 @@ library Calculate {
                 user,
                 assetCount
             );
-        uint256 assetPrice = getAssetValueInEth(assetData.priceFeed);
+        uint256 assetPrice = getAssetPriceInEth(assetData.priceFeed);
         uint256 decreaseValueInEth = (amount / (10 ** assetData.decimals)) *
             assetPrice;
         uint256 totalCollateralAfterDecreaseInEth = totalCollateralInEth -
@@ -58,7 +58,29 @@ library Calculate {
         address user,
         uint256 assetCount,
         uint256 amount
-    ) internal view returns (bool) {}
+    ) internal view returns (bool) {
+        DataTypes.AssetData memory assetData = assetInfo[assetAddr];
+        (
+            uint256 totalCollateralInEth,
+            uint256 totalDebtInEth
+        ) = calculateUserData(
+                assetList,
+                assetInfo,
+                userUsageData,
+                user,
+                assetCount
+            );
+
+        //value of borrowing asset
+        uint256 borrowingValueInEth = (amount *
+            getAssetPriceInEth(assetData.priceFeed)) /
+            (10 ** assetData.decimals);
+        //value of borrowing asset after adjust(how much callateral needed)
+        uint256 borrowingValueInEthAfterAdjust = (borrowingValueInEth *
+            LIQUIDATION_PRECISION) / LIQUIDATION_THREHOLD;
+        return (totalCollateralInEth >
+            totalDebtInEth + borrowingValueInEthAfterAdjust);
+    }
 
     function calculateUserData(
         mapping(uint256 => address) storage assetList,
@@ -80,11 +102,11 @@ library Calculate {
                 currentAssetAddress
             ];
             address currentAssetPriceFeedAddr = currentAsset.priceFeed;
-            uint256 currentAssetUintPriceInEth = getAssetValueInEth(
+            uint256 currentAssetUintPriceInEth = getAssetPriceInEth(
                 currentAssetPriceFeedAddr
             );
             uint256 tokenUnit = 10 ** currentAsset.decimals;
-
+            //calculate collateral balance
             if (userUsageData.isDepositedAssert(assetId)) {
                 address currentAssetSToken = currentAsset.sTokenAddress;
                 uint256 sTokenBalanceOfUser = IERC20(currentAssetSToken)
@@ -109,7 +131,6 @@ library Calculate {
         uint256 collateralInEth,
         uint256 debtInEth
     ) internal pure returns (uint256) {
-        //if debt is 0 ?
         if (debtInEth == 0) {
             return 1e18;
         }
@@ -118,7 +139,7 @@ library Calculate {
         return (totalCollateralAdjustForThrehold / debtInEth);
     }
 
-    function getAssetValueInEth(
+    function getAssetPriceInEth(
         address priceFeedAddr
     ) public view returns (uint256) {
         AggregatorV3Interface priceFeed = AggregatorV3Interface(priceFeedAddr);
