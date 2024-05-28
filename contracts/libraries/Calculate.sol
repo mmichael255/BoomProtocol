@@ -6,6 +6,7 @@ import {DataTypes} from "./DataTypes.sol";
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 // import {OracleLib} from "./OracleLib.sol";
 import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+import {Errors} from "./Errors.sol";
 
 library Calculate {
     // using OracleLib for AggregatorV3Interface;
@@ -71,6 +72,15 @@ library Calculate {
                 assetCount
             );
 
+        //need to calculate user healthfactor
+        uint256 healthFactor = calculateUserHealthFactor(
+            totalCollateralInEth,
+            totalDebtInEth
+        );
+
+        if (healthFactor <= MIN_HEALTH_FACTOR) {
+            revert Errors.BP__HealthFactorLowerThanMin(healthFactor);
+        }
         //value of borrowing asset
         uint256 borrowingValueInEth = (amount *
             getAssetPriceInEth(assetData.priceFeed)) /

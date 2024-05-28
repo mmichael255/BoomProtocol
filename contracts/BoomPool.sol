@@ -112,6 +112,11 @@ contract BoomPool {
 
         //insterest rate?
         //Dtoken mint, is first?setBorrow
+        IERC20(assetData.dTokenAddress).mint(
+            msg.sender,
+            amount,
+            assetData.interestRate
+        );
 
         //SToken release underlying token
     }
@@ -135,6 +140,7 @@ contract BoomPool {
         address priceFeed,
         uint256 decimals,
         uint256 assetIndex,
+        uint256 interestRate,
         address sToken,
         address dToken
     ) public onlyAdmin {
@@ -143,6 +149,7 @@ contract BoomPool {
         assetData.priceFeed = priceFeed;
         assetData.decimals = decimals;
         assetData.assetIndex = assetIndex;
+        assetData.interestRate = interestRate;
         assetData.sTokenAddress = sToken;
         assetData.dTokenAddress = dToken;
     }

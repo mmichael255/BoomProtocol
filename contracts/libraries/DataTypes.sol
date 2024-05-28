@@ -8,6 +8,7 @@ library DataTypes {
         address priceFeed;
         uint256 decimals;
         uint256 assetIndex;
+        uint256 interestRate;
         address sTokenAddress;
         address dTokenAddress;
     }

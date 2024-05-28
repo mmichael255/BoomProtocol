@@ -6,6 +6,7 @@ library Errors {
     error BP__AssertNotActive();
     error BP__TransationNotAllowed();
     error BP__BorrowNotAllowed();
+    error BP__HealthFactorLowerThanMin(uint256 healtherfactor);
     error BoomPoolInsufficientSTokenBlance(
         address user,
         uint256 amount,
