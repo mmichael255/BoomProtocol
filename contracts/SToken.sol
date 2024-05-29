@@ -47,6 +47,14 @@ contract SToken is ERC20("ShareToken", "st"), ERC20Burnable {
         return previousBalance == 0;
     }
 
+    function transferUnderlyingTo(
+        address to,
+        uint256 amount
+    ) external onlyPool returns (uint256) {
+        IERC20(_underlyingAsset).safeTransfer(to, amount);
+        return amount;
+    }
+
     function burn(
         address from,
         address to,

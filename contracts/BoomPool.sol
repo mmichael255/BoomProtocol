@@ -7,6 +7,7 @@ import {DataTypes} from "./libraries/DataTypes.sol";
 import {UserInfoUpdate} from "./libraries/UserInfoUpdate.sol";
 import {Calculate} from "./libraries/Calculate.sol";
 import {SToken} from "./SToken.sol";
+import {DToken} from "./DToken.sol";
 import {Errors} from "./libraries/Errors.sol";
 
 contract BoomPool {
@@ -111,14 +112,16 @@ contract BoomPool {
         }
 
         //insterest rate?
-        //Dtoken mint, is first?setBorrow
-        IERC20(assetData.dTokenAddress).mint(
-            msg.sender,
-            amount,
-            assetData.interestRate
-        );
+        bool isFirst = DToken(assetData.dTokenAddress).mint(msg.sender, amount);
+        if (isFirst) {
+            _userInfo[msg.sender].setBorrowAssert(assetData.id, true);
+        }
 
         //SToken release underlying token
+        SToken(assetData.sTokenAddress).transferUnderlyingTo(
+            msg.sender,
+            amount
+        );
     }
 
     function repay() public {}

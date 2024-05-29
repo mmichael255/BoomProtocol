@@ -33,11 +33,10 @@ contract DToken is ERC20("DebtToken", "dt"), ERC20Burnable {
 
     function mint(
         address user,
-        uint256 amount,
-        uint256 insertestRate
+        uint256 amount
     ) external onlyPool returns (bool) {
         uint256 previousBalance = super.balanceOf(user);
-        uint256 mintAmount = amount / index;
+        uint256 mintAmount = amount;
         _mint(user, mintAmount);
         emit MINT(user, mintAmount);
         return previousBalance == 0;
