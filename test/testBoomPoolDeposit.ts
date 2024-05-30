@@ -98,11 +98,13 @@ describe("BoompoolDeposit", async () => {
       await BoomPool.addAssert(Asset1Contract);
       const assetIndex = 1;
       const decimals = 18;
+      const interestRate = 0;
       await BoomPool.initAssert(
         Asset1Contract,
         asset1Oracle,
         decimals,
         assetIndex,
+        interestRate,
         STokenForAsset1,
         DTokenForAsset1
       );
@@ -153,6 +155,7 @@ describe("BoompoolDeposit", async () => {
 
       const decimals = 18;
       const assetIndex = 1;
+      const interestRate = 1;
       const amount = ethers.parseEther("10");
 
       await BoomPool.initAssert(
@@ -161,6 +164,7 @@ describe("BoompoolDeposit", async () => {
         decimals,
         assetIndex,
         STokenForAsset1,
+        interestRate,
         DTokenForAsset1
       );
 

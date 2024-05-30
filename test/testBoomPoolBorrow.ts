@@ -7,12 +7,12 @@ import { Contract, Signer } from "ethers";
 
 const decimals = 18;
 const assetIndex = 1;
-const interestRate = 1;
+const interestRate = 0;
 const allowedAmount = ethers.parseEther("1");
 let userDepositedAsset1: Signer = testEnv.users[1];
 let userDepositedAsset2: Signer = testEnv.users[6];
 
-describe("BoomPoolWithdraw", async () => {
+describe("BoomPoolBorrow", async () => {
   before(async () => {
     await initTestEnv();
     const { boomPool, assets, users, sTokens, dTokens, priceFeeds } = testEnv;
