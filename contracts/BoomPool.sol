@@ -21,6 +21,23 @@ contract BoomPool {
     mapping(address => DataTypes.AssetData) private _assetInfo;
     mapping(address => DataTypes.UserData) private _userInfo;
 
+    event Deposit(
+        address indexed user,
+        address indexed asset,
+        uint256 indexed amount
+    );
+    event Borrow(
+        address indexed user,
+        address indexed asset,
+        uint256 indexed amount
+    );
+    event Withdraw(
+        address user,
+        address indexed to,
+        address indexed asset,
+        uint256 indexed amount
+    );
+
     constructor() {
         _admin = msg.sender;
     }
@@ -48,6 +65,7 @@ contract BoomPool {
         if (isFirst) {
             _userInfo[msg.sender].setDepositAssert(assetData.id, true);
         }
+        emit Deposit(msg.sender, asset, amount);
     }
 
     function withdraw(address asset, uint256 amount, address to) public {
@@ -89,6 +107,7 @@ contract BoomPool {
             amount,
             assetData.assetIndex
         );
+        emit Withdraw(msg.sender, to, asset, amount);
     }
 
     function borrow(address asset, uint256 amount) public {
@@ -117,11 +136,11 @@ contract BoomPool {
             _userInfo[msg.sender].setBorrowAssert(assetData.id, true);
         }
 
-        //SToken release underlying token
         SToken(assetData.sTokenAddress).transferUnderlyingTo(
             msg.sender,
             amount
         );
+        emit Borrow(msg.sender, asset, amount);
     }
 
     function repay() public {}
