@@ -131,7 +131,11 @@ contract BoomPool {
         }
 
         //insterest rate?
-        bool isFirst = DToken(assetData.dTokenAddress).mint(msg.sender, amount);
+        bool isFirst = DToken(assetData.dTokenAddress).mint(
+            msg.sender,
+            amount,
+            assetData.interestRate
+        );
         if (isFirst) {
             _userInfo[msg.sender].setBorrowAssert(assetData.id, true);
         }

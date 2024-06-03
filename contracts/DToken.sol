@@ -33,12 +33,38 @@ contract DToken is ERC20("DebtToken", "dt"), ERC20Burnable {
 
     function mint(
         address user,
-        uint256 amount
+        uint256 amount,
+        uint256 interestRate
     ) external onlyPool returns (bool) {
-        uint256 previousBalance = super.balanceOf(user);
+        //calculate the user balance so far (previous balance + interest)
+        (
+            uint256 currentBalance,
+            uint256 increasedBalance
+        ) = _calculateUserBalance(user);
+
+        //set user borrow timestamp
+        //set user interest Rate
         uint256 mintAmount = amount;
+
+        //mint amount + increased balance
         _mint(user, mintAmount);
         emit MINT(user, mintAmount);
-        return previousBalance == 0;
+        return currentBalance == 0;
+    }
+
+    function _calculateUserBalance(
+        address user
+    ) internal view returns (uint256, uint256) {
+        uint256 previousBalance = super.balanceOf(user);
+        uint256 currentBalance = balanceOf(user);
+        return (currentBalance, (currentBalance - previousBalance));
+    }
+
+    /**
+     * @dev Calculates the current user debt balance
+     * @return The accumulated debt of the user
+     **/
+    function balanceOf(address user) public view override returns (uint256) {
+        //use timestamp and interest rate to calculate user current balance
     }
 }
