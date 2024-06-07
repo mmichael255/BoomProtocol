@@ -9,6 +9,12 @@ contract DToken is ERC20("DebtToken", "dt"), ERC20Burnable {
     address private _pool;
     address private _underlyingAsset;
 
+    mapping(address => uint256) _timeStamp;
+    mapping(address => uint256) _userRate;
+
+    uint256 internal constant SECONDS_PER_YEAR = 365 days;
+    uint256 internal constant rateDecimals = 1e18;
+
     event MINT(address indexed user, uint256 indexed amount);
     event BURN(address indexed user, uint256 indexed amount);
 
@@ -43,6 +49,7 @@ contract DToken is ERC20("DebtToken", "dt"), ERC20Burnable {
         ) = _calculateUserBalance(user);
 
         //set user borrow timestamp
+        _timeStamp[user] = block.timestamp;
         //set user interest Rate
         uint256 mintAmount = amount;
 
@@ -52,19 +59,42 @@ contract DToken is ERC20("DebtToken", "dt"), ERC20Burnable {
         return currentBalance == 0;
     }
 
+    /**
+     * @dev Calculates the current user debt balance
+     * @return The accumulated debt of the user
+     * (1+x)^n
+     **/
+    function balanceOf(address user) public view override returns (uint256) {
+        uint256 userBalance = super.balanceOf(user);
+        if (userBalance == 0) {
+            return 0;
+        }
+        uint256 compoundedInterestRate = _calculateCompoundedInterest(
+            _userRate[user],
+            _timeStamp[user]
+        );
+        return userBalance * (compoundedInterestRate / rateDecimals);
+    }
+
+    function _calculateCompoundedInterest(
+        uint256 rate,
+        uint256 lastUpdateTime
+    ) returns (uint256) {
+        uint256 ratePreSecond = rate / SECONDS_PER_YEAR;
+        uint256 period = block.timestamp - lastUpdateTime;
+        //(1+ratePreSecond) power period
+
+        //
+    }
+
     function _calculateUserBalance(
         address user
     ) internal view returns (uint256, uint256) {
         uint256 previousBalance = super.balanceOf(user);
+        if (previousBalance == 0) {
+            return (0, 0);
+        }
         uint256 currentBalance = balanceOf(user);
         return (currentBalance, (currentBalance - previousBalance));
-    }
-
-    /**
-     * @dev Calculates the current user debt balance
-     * @return The accumulated debt of the user
-     **/
-    function balanceOf(address user) public view override returns (uint256) {
-        //use timestamp and interest rate to calculate user current balance
     }
 }
