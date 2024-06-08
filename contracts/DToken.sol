@@ -10,10 +10,10 @@ contract DToken is ERC20("DebtToken", "dt"), ERC20Burnable {
     address private _underlyingAsset;
 
     mapping(address => uint256) _timeStamp;
-    mapping(address => uint256) _userRate;
+    mapping(address => uint256) _userRInterestate;
 
     uint256 internal constant SECONDS_PER_YEAR = 365 days;
-    uint256 internal constant rateDecimals = 1e18;
+    uint256 internal constant RATE_DECIMALS = 1e18;
 
     event MINT(address indexed user, uint256 indexed amount);
     event BURN(address indexed user, uint256 indexed amount);
@@ -51,7 +51,11 @@ contract DToken is ERC20("DebtToken", "dt"), ERC20Burnable {
         //set user borrow timestamp
         _timeStamp[user] = block.timestamp;
         //set user interest Rate
-        uint256 mintAmount = amount;
+        uint256 newUserRInterestate = (_userRInterestate[user] *
+            currentBalance +
+            amount *
+            interestRate) / (currentBalance + amount);
+        uint256 mintAmount = amount + increasedBalance;
 
         //mint amount + increased balance
         _mint(user, mintAmount);
@@ -70,20 +74,26 @@ contract DToken is ERC20("DebtToken", "dt"), ERC20Burnable {
             return 0;
         }
         uint256 compoundedInterestRate = _calculateCompoundedInterest(
-            _userRate[user],
+            _userRInterestate[user],
             _timeStamp[user]
         );
-        return userBalance * (compoundedInterestRate / rateDecimals);
+        return
+            userBalance +
+            (userBalance * compoundedInterestRate) /
+            RATE_DECIMALS;
     }
 
     function _calculateCompoundedInterest(
         uint256 rate,
         uint256 lastUpdateTime
-    ) returns (uint256) {
-        uint256 ratePreSecond = rate / SECONDS_PER_YEAR;
+    ) internal view returns (uint256) {
         uint256 period = block.timestamp - lastUpdateTime;
+        if (period == 0) {
+            return RATE_DECIMALS;
+        }
+        uint256 ratePreSecond = rate / SECONDS_PER_YEAR;
         //(1+ratePreSecond) power period
-
+        return ratePreSecond * period;
         //
     }
 
